@@ -1,0 +1,23 @@
+version: 0.2
+env:
+  variables:
+    MY_SERVER_NAME: "default_server_name"
+phases:
+  pre_build:
+    commands:
+      - echo ${MY_ID}
+      - echo ${MY_REGION}
+      - aws ecr get-login-password --region ${MY_REGION} | docker login --username AWS --password-stdin ${MY_ID}.dkr.ecr.${MY_REGION}.amazonaws.com
+  build:
+    commands:
+      - echo Building the Docker image...
+      - echo Building from ${MY_NODE_REPO}
+      #- curl -i -H "Authorization:Basic $TOKEN" https://${MY_ID}.dkr.ecr.${MY_REGION}.amazonaws.com/v2/amazonlinux/linux/build
+      #- curl -i -H "Authorization:Basic $TOKEN" https://${MY_ID}.dkr.ecr.${MY_REGION}.amazonaws.com/v2/amazonlinux/linux/push
+      - docker build --build-arg MY_NODE_REPO=${MY_NODE_REPO} -t cdk-hnb659fds-container-assets-${MY_ID}-${MY_REGION} .
+      - docker tag cdk-hnb659fds-container-assets-${MY_ID}-${MY_REGION}:latest ${MY_ID}.dkr.ecr.${MY_REGION}.amazonaws.com/cdk-hnb659fds-container-assets-${MY_ID}-${MY_REGION}:latest
+  post_build:
+    commands:
+      - echo "Pushing to Docker image..."
+      #- curl -i -H "Authorization:Basic $TOKEN" https://${MY_ID}.dkr.ecr.${MY_REGION}.amazonaws.com/v2/amazonlinux/linux/push
+      - docker push ${MY_ID}.dkr.ecr.${MY_REGION}.amazonaws.com/cdk-hnb659fds-container-assets-${MY_ID}-${MY_REGION}:latest

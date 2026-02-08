@@ -1,0 +1,33 @@
+{
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "inferenceAccelerators": [],
+  "containerDefinitions": [
+    {
+      "name": "maskgeto_server",
+      "image": "160579864932.dkr.ecr.us-west-2.amazonaws.com/masktego_server:latest",
+      "resourceRequirements": null,
+      "essential": true,
+      "startTimeout": 0,
+      "stopTimeout": 100,
+      "portMappings": [
+        {
+          "appProtocol": "http",
+          "containerPort": "80",
+          "hostPort": "80",
+          "protocol": "tcp"
+        }
+
+      ]
+    }
+  ],
+  "volumes": [],
+  "networkMode": "awsvpc",
+  "memory": "512",
+  "cpu": "256",
+  "executionRoleArn": "arn:aws:iam::160579864932:role/ecsTaskExecutionRole",
+  "family": "masktego-devops-sandbox-task-definition",
+  "taskRoleArn": "arn:aws:iam::160579864932:role/ecsTaskExecutionRole",
+  "placementConstraints": []
+}

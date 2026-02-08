@@ -5,7 +5,7 @@
   "inferenceAccelerators": [],
   "containerDefinitions": [
     {
-      "name": "maskgeto_server",
+      "name": "masktego_server",
       "image": "160579864932.dkr.ecr.us-west-2.amazonaws.com/masktego_server:latest",
       "resourceRequirements": null,
       "essential": true,

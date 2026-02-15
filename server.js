@@ -6,12 +6,6 @@ const SERVER_NAME = args['serverName'];
 
 const UPDATE_INTERVAL_TIME = 20;
 const NO_PLAYER_TIME_OUT = 60 * 1000;
-const NUMBER_OF_PLAYER_SLOTS = 4;
-
-const RAT_CATCHING_GAME_TIME = 120.0;
-const TRAP_MAKING_GAME_TIME = 120.0;
-const HALLWAY_GAME_TIME = 120.0;
-const GOLEM_GAME_TIME = 120.0;
 
 var m_orangePlayer = -1;
 var m_purplePlayer = -1;
@@ -34,16 +28,6 @@ const GAME_STATE = Object.freeze({
     PLAYER_2_TURN: Symbol("player_2_turn"),
     PLAYER_SWAP: Symbol("player_swap"),
 });
-let m_serverState = SERVER_STATE.NOT_PLAYING;
-let m_gameState = GAME_STATE.NOT_PLAYING;
-
-
-let m_boardCells = [
-    "1", "2", "0", "-2", "-1",
-    "3", "1", "8", "-1", "-3",
-    "7", "9", "0", "-9", "-7",
-    "3", "1", "8", "-1", "-3",
-    "1", "2", "0", "-2", "-1"];
 
 
 console.log("Server " + SERVER_NAME + " has started on port " + m_port);
@@ -53,11 +37,11 @@ wss.on('connection', ws => {
     var id = -1;
     if (m_orangePlayer == -1) {
         m_orangePlayer = 1;
-        id = 0;
+        id = 1;
     }
     else if (m_purplePlayer == -1) {
         m_purplePlayer = 2;
-        id = 1;
+        id = 2;
     }
     ws.id = id;
 
@@ -74,26 +58,11 @@ wss.on('connection', ws => {
             if (listedData[0] == "Ping") {
                 HandleMessage_ping(ws);
             }
-            else if (listedData[0] == "Player_1_Moved") {
-                HandleMessage_Player_1_Moved(listedData, stringData);
-            }
-            else if (listedData[0] == "Player_2_Moved") {
-                HandleMessage_Player_2_Moved(listedData, stringData);
-            }
             else if (listedData[0] == "Player_Swapped") {
-                HandleMessage_Player_Swapped(listedData, stringData);
+                HandleMessage_Player_Swapped(parseInt(listedData[1]), listedData);
             }
-            else if (listedData[0] == "Player_1_Won") {
-                HandleMessage_Player_1_Won(listedData, stringData, id);
-            }
-            else if (listedData[0] == "Player_2_Won") {
-                HandleMessage_Player_2_Won(listedData, stringData, id);
-            }
-            else if (listedData[0] == "Player_1_Attack") {
-                HandleMessage_Player_1_Attack(listedData, stringData, id);
-            }
-            else if (listedData[0] == "Player_2_Attack") {
-                HandleMessage_Player_2_Attack(listedData, stringData, id);
+            else if (listedData[0] == "Board_Update") {
+                HandleMessage_Board_Update(parseInt(listedData[1]), stringData);
             }
             else {
                 console.WriteLine(`Unhandled message type: ${listedData[0]}`);
@@ -102,6 +71,8 @@ wss.on('connection', ws => {
 
         ws.on("close", () => {
             console.log("Client disconnected!");
+            if (id == 1) { m_orangePlayer = -1; id = -1; }
+            if (id == 2) { m_purplePlayer = -1; id = -1; }
         });
     }
 });
@@ -136,50 +107,39 @@ const HandleMessage_ping = (ws) => {
     SendMessageToClient(ws, "Ping", "Ping");
 }
 
-const HandleMessage_Player_1_Moved = (id, listedData) => {
-    console.log(`Player 1 turn is over.`);
-    SendMessageToAllClients("Player_2_Turn", `Player_2_Turn,${listedData[1]}`, 0);
-
-}
-
-const HandleMessage_Player_2_Moved = (id, listedData) => {
-    console.log(`Player 2 turn is over.`);
-    m_boardCells = listedData[1].split('|');
-    SendMessageToAllClients("Player_Swap", `Player_Swap,${listedData}`);
-}
-
-
 
 const HandleMessage_Player_Swapped = (id, listedData) => {
+//"Action, playerId, pos0.x | pos0.y, pos1.x | pos1.y
+//      0,        1,               2,               3
     console.log(`Player ${id} has swapped.`);
     m_playerReadinessDictionary.set(id, true);
-
-    let pos0 = { x: parseInt(listedData[1]), y: parseInt(listedData[2]) };
-    let pos1 = { x: parseInt(listedData[3]), y: parseInt(listedData[4]) };
-    SwapCellsOnBoard(pos0, pos1);
+    SendMessageToAllClients("Board_Update", `Board_Update,${listedData[1]},${listedData[2]},${listedData[3]}`, id);
 
     if (m_playerReadinessDictionary.size == 2) {
-        SendMessageToAllClients("Player_1_Turn", `Player_1_Turn,${m_boardCells}`);
+        SendMessageToAllClients("Player_1_Turn", "Player_1_Turn");
         m_playerReadinessDictionary = new Map();
     }
 }
 
-function SwapCellsOnBoard(pos0, pos1){
+const HandleMessage_Board_Update = (id, stringData) => {
+    console.log(`Player ${id} sent board update.`);
 
-    let temp = m_boardCells[(pos0.x * 5) + pos0.y];
-    m_boardCells[(pos0.x * 5) + pos0.y] = m_boardCells[(pos1.x * 5) + pos1.y];
-    m_boardCells[(pos1.x * 5) + pos1.y] = temp;
+    //"Action, playerId, pos0.x | pos0.y, pos1.x | pos1.y
+    //      0,        1,               2,               3
+    SendMessageToAllClients("Board_Update", stringData, id);
 }
+
 
 //let ccc = 0;
 async function ServerUpdate() {
 
     let deltaTime = Date.now() - m_CurrGameTime;
+    m_CurrGameTime = Date.now();
     if (m_orangePlayer == -1 && m_purplePlayer == -1) {
         m_noPlayerCountUp += deltaTime;
         //console.log(`No players connected for ${m_noPlayerCountUp * 0.001} seconds.`);
         if (m_noPlayerCountUp >= NO_PLAYER_TIME_OUT) {
-            console.log(`No players connected for ${NO_PLAYER_TIME_OUT * 0.001} seconds. Shutting down server.`);
+            console.log(`No players connected for ${m_noPlayerCountUp * 0.001} seconds. Shutting down server.`);
             process.exit();
         }
     }

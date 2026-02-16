@@ -19,6 +19,5 @@
   "type": "commonjs",
   "devDependencies": {
     "eslint": "^9.31.0"
-  },
-  "description": ""
+  }
 }

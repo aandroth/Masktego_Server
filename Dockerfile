@@ -1,7 +1,6 @@
 ARG MY_NODE_REPO=""
 FROM ${MY_NODE_REPO}
 RUN echo ${MY_NODE_REPO}
-RUN echo MakeItBetter
 WORKDIR /
 COPY package*.json server.js ./
 RUN npm install

@@ -1,8 +1,14 @@
 const Websocket = require('ws');
+const http = require('http');
 const m_port = 5000;
 const wss = new Websocket.Server({ port: m_port });
 const args = require('minimist')(process.argv.slice(2));
 const SERVER_NAME = args['serverName'];
+
+const allowedOrigins = [
+    'https://aquinsgreatgames.com',
+    'http://localhost:3000' // For local development
+];
 
 const UPDATE_INTERVAL_TIME = 20;
 const NO_PLAYER_TIME_OUT = 60 * 1000;

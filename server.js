@@ -1,11 +1,10 @@
 const Websocket = require('ws');
 const http = require('http');
 const m_port = 5000;
-const wss = new Websocket.Server({ port: m_port });
 const args = require('minimist')(process.argv.slice(2));
 const SERVER_NAME = args['serverName'];
 
-const allowedOrigins = [
+const m_allowedOrigins = [
     'https://aquinsgreatgames.com',
     'http://localhost:3000' // For local development
 ];
@@ -37,6 +36,43 @@ const GAME_STATE = Object.freeze({
 
 
 console.log("Server " + SERVER_NAME + " has started on port " + m_port);
+
+// Create HTTP server to handle upgrade requests
+const server = http.createServer((req, res) => {
+    // Handle CORS preflight for polling fallback
+    if (req.method === 'OPTIONS') {
+        const origin = req.headers.origin;
+        if (m_allowedOrigins.includes(origin)) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+        }
+        res.writeHead(204);
+        res.end();
+        return;
+    }
+    res.writeHead(404);
+    res.end();
+});
+
+const wss = new Websocket.Server({
+    server,
+    verifyClient: (info, callback) => {
+        // For WebSocket connections, we can allow all origins since the client will handle CORS for polling fallback
+        const origin = info.origin || info.req.headers.origin;
+
+        //Check if the origin is in the allowed list
+        if (m_allowedOrigins.includes(origin)) {
+            callback(true);
+        }
+        else {
+            console.log(`Connection from origin ${origin} BLOCKED.`);
+            callback(false, 403, 'Origin not allowed');
+        }
+    },
+    port: m_port
+});
 
 wss.on('connection', ws => {
     console.log(`Client connected!`);

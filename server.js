@@ -34,6 +34,21 @@ const GAME_STATE = Object.freeze({
     PLAYER_SWAP: Symbol("player_swap"),
 });
 
+//const WebSocket = require("ws").Server;
+//const HttpsServer = require('https').createServer;
+//const fs = require("fs");
+
+//server = HttpsServer({
+//    cert: fs.readFileSync(config.ssl_cert_path),
+//    key: fs.readFileSync(config.ssl_key_path)
+//})
+//socket = new WebSocket({
+//    server: server
+//});
+
+//socket.on(...);
+//server.listen(config.port);
+
 
 console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 
@@ -57,7 +72,7 @@ const server = http.createServer((req, res) => {
 });
 
 const wss = new Websocket.Server({
-    server,
+    server: server,
     verifyClient: (info, callback) => {
         // For WebSocket connections, we can allow all origins since the client will handle CORS for polling fallback
         const origin = info.origin || info.req.headers.origin;

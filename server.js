@@ -85,9 +85,10 @@ const wss = new Websocket.Server({
             console.log(`Connection from origin ${origin} BLOCKED.`);
             callback(false, 403, 'Origin not allowed');
         }
-    },
-    port: m_port
+    }
 });
+//,
+//port: m_port
 
 wss.on('connection', ws => {
     console.log(`Client connected!`);

@@ -4,9 +4,8 @@ const https = require('https');
 const m_port = 5000;
 const args = require('minimist')(process.argv.slice(2));
 const SERVER_NAME = args['serverName'];
-const DATA_URL = args['dataUrl'];
-let m_cert = "";
-let m_priv = "";
+const CERT = args['cert'];
+const PRIV = args['priv'];
 
 const m_allowedOrigins = [
     'https://aquinsgreatgames.com',
@@ -54,7 +53,7 @@ const GAME_STATE = Object.freeze({
 //server.listen(config.port);
 
 
-console.log("Server " + SERVER_NAME + " has started on port " + m_port + " with dataUrl " + DATA_URL);
+console.log("Server " + SERVER_NAME + " has started on port " + m_port + " with cert " + CERT + " and priv " + PRIV);
 
 
 

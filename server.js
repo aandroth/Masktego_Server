@@ -1,8 +1,12 @@
 const Websocket = require('ws');
 const http = require('http');
+const https = require('https');
 const m_port = 5000;
 const args = require('minimist')(process.argv.slice(2));
 const SERVER_NAME = args['serverName'];
+const DATA_URL = args['dataUrl'];
+let m_cert = "";
+let m_priv = "";
 
 const m_allowedOrigins = [
     'https://aquinsgreatgames.com',
@@ -10,7 +14,7 @@ const m_allowedOrigins = [
 ];
 
 const UPDATE_INTERVAL_TIME = 20;
-const NO_PLAYER_TIME_OUT = 60 * 1000;
+const NO_PLAYER_TIME_OUT = 120 * 1000;
 
 var m_orangePlayer = -1;
 var m_purplePlayer = -1;
@@ -51,6 +55,8 @@ const GAME_STATE = Object.freeze({
 
 
 console.log("Server " + SERVER_NAME + " has started on port " + m_port);
+
+
 
 // Create HTTP server to handle upgrade requests
 const server = http.createServer((req, res) => {
@@ -212,5 +218,20 @@ const HandleMessage_killGame = (data) => {
 
 ///////////////////////////////////////////////////////////////////////
 
-m_intervalUpdateId = setInterval(() => ServerUpdate(), UPDATE_INTERVAL_TIME);
-ServerUpdate();
+//m_intervalUpdateId = setInterval(() => ServerUpdate(), UPDATE_INTERVAL_TIME);
+//ServerUpdate();
+
+//async function getData() {
+//    try {
+//        const response = await fetch('https://example.com');
+//        if (!response.ok) {
+//            throw new Error(`HTTP error! status: ${response.status}`);
+//        }
+//        const data = await response.json();
+//        console.log(data);
+//    } catch (error) {
+//        console.error('Error fetching data:', error);
+//    }
+//}
+
+//getData();

@@ -54,7 +54,7 @@ const GAME_STATE = Object.freeze({
 //server.listen(config.port);
 
 
-console.log("Server " + SERVER_NAME + " has started on port " + m_port);
+console.log("Server " + SERVER_NAME + " has started on port " + m_port + " with dataUrl" + DATA_URL);
 
 
 

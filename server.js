@@ -37,44 +37,32 @@ const GAME_STATE = Object.freeze({
     PLAYER_SWAP: Symbol("player_swap"),
 });
 
-//const WebSocket = require("ws").Server;
-//const HttpsServer = require('https').createServer;
-//const fs = require("fs");
 
-//server = HttpsServer({
-//    cert: fs.readFileSync(config.ssl_cert_path),
-//    key: fs.readFileSync(config.ssl_key_path)
-//})
-//socket = new WebSocket({
-//    server: server
-//});
-
-//socket.on(...);
-//server.listen(config.port);
-
+ const serverOptions = {
+    cert: CERT,
+    key: PRIV
+};
 
 console.log("Server " + SERVER_NAME + " has started on port " + m_port + " with cert " + CERT + " and priv " + PRIV);
 
-
-
-//// Create HTTP server to handle upgrade requests
-//const server = http.createServer((req, res) => {
-//    // Handle CORS preflight for polling fallback
-//    if (req.method === 'OPTIONS') {
-//        const origin = req.headers.origin;
-//        if (m_allowedOrigins.includes(origin)) {
-//            res.setHeader('Access-Control-Allow-Origin', origin);
-//            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-//            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-//            res.setHeader('Access-Control-Allow-Credentials', 'true');
-//        }
-//        res.writeHead(204);
-//        res.end();
-//        return;
-//    }
-//    res.writeHead(404);
-//    res.end();
-//});
+// Create HTTP server to handle upgrade requests
+const server = https.createServer(serverOptions, (req, res) => {
+    // Handle CORS preflight for polling fallback
+    if (req.method === 'OPTIONS') {
+        const origin = req.headers.origin;
+        if (m_allowedOrigins.includes(origin)) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+        }
+        res.writeHead(204);
+        res.end();
+        return;
+    }
+    res.writeHead(404);
+    res.end();
+}).listen(m_port);
 
 const wss = new Websocket.Server({
     server: server,

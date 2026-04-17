@@ -3,8 +3,8 @@ const https = require('https');
 const m_port = 5000;
 const args = require('minimist')(process.argv.slice(2));
 const SERVER_NAME = args['serverName'];
-const CERT = args['cert'];
-const PRIV = args['priv'];
+const CERT = "-----BEGIN CERTIFICATE----- \n" + args['cert'] + " \n-----END CERTIFICATE-----";
+const PRIV = "-----BEGIN PRIVATE KEY----- \n" + args['priv'] + " \n-----END PRIVATE KEY-----";  
 
 const m_allowedOrigins = [
     'https://aquinsgreatgames.com',

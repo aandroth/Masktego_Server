@@ -1,5 +1,4 @@
 const Websocket = require('ws');
-const http = require('http');
 const https = require('https');
 const m_port = 5000;
 const args = require('minimist')(process.argv.slice(2));
@@ -43,7 +42,10 @@ const GAME_STATE = Object.freeze({
     key: PRIV
 };
 
-console.log("Server " + SERVER_NAME + " has started on port " + m_port + " with cert " + CERT + " and priv " + PRIV);
+console.log("Server " + SERVER_NAME + " has started on port " + m_port + " with cert:");
+console.log(CERT);
+console.log(" And priv: ");
+console.logPRIV);
 
 // Create HTTP server to handle upgrade requests
 const server = https.createServer(serverOptions, (req, res) => {
@@ -80,8 +82,6 @@ const wss = new Websocket.Server({
         }
     }
 });
-//,
-//port: m_port
 
 wss.on('connection', ws => {
     console.log(`Client connected!`);

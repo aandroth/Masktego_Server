@@ -66,6 +66,7 @@ const server = https.createServer(serverOptions, (req, res) => {
     res.writeHead(404);
     res.end();
 }).listen(m_port);
+console.log("Server created");
 
 const wss = new Websocket.Server({
     server: server,
@@ -75,6 +76,7 @@ const wss = new Websocket.Server({
 
         //Check if the origin is in the allowed list
         if (m_allowedOrigins.includes(origin)) {
+            console.log(`Connection from origin ${origin} ALLOWED.`);
             callback(true);
         }
         else {
@@ -83,6 +85,7 @@ const wss = new Websocket.Server({
         }
     }
 });
+console.log("Websocket created");
 
 wss.on('connection', ws => {
     console.log(`Client connected!`);
@@ -128,6 +131,7 @@ wss.on('connection', ws => {
         });
     }
 });
+console.log("Websocket set");
 
 function SendMessageToClient(ws, messageAction = "", messageData = {}) {
     if (messageAction == "") {

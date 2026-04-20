@@ -69,6 +69,7 @@ const server = https.createServer(serverOptions, (req, res) => {
 console.log("Server created");
 
 const wss = new Websocket.Server({
+    port: m_port,
     server: server,
     verifyClient: (info, callback) => {
         // For WebSocket connections, we can allow all origins since the client will handle CORS for polling fallback

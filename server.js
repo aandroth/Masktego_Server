@@ -39,7 +39,7 @@ const GAME_STATE = Object.freeze({
 
  const serverOptions = {
     cert: CERT,
-    key: PRIV
+     key: PRIV
 };
 
 console.log("Server " + SERVER_NAME + " has started on port " + m_port);
@@ -65,11 +65,10 @@ const server = https.createServer(serverOptions, (req, res) => {
     }
     res.writeHead(404);
     res.end();
-}).listen(m_port);
+});
 console.log("Server created");
 
 const wss = new Websocket.Server({
-    port: m_port,
     server: server,
     verifyClient: (info, callback) => {
         // For WebSocket connections, we can allow all origins since the client will handle CORS for polling fallback
@@ -87,6 +86,8 @@ const wss = new Websocket.Server({
     }
 });
 console.log("Websocket created");
+
+server.listen(m_port, () => console.log("Server created on port " + m_port));
 
 wss.on('connection', ws => {
     console.log(`Client connected!`);

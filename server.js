@@ -60,7 +60,7 @@ const server = https.createServer(serverOptions, (req, res) => {
             res.setHeader('Access-Control-Allow-Credentials', 'true');
         }
         res.writeHead(204);
-        res.end();
+        res.end("This is the Masktego Server!");
         return;
     }
     res.writeHead(404);
@@ -87,7 +87,7 @@ const wss = new Websocket.Server({
 });
 console.log("Websocket created");
 
-server.listen(m_port, () => console.log("Server created on port " + m_port));
+server.listen(m_port, () => console.log("Server listening on port " + m_port));
 
 wss.on('connection', ws => {
     console.log(`Client connected!`);

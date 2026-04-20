@@ -42,10 +42,11 @@ const GAME_STATE = Object.freeze({
     key: PRIV
 };
 
-console.log("Server " + SERVER_NAME + " has started on port " + m_port + " with cert:");
-console.log(CERT);
+console.log("Server " + SERVER_NAME + " has started on port " + m_port);
+//console.log("With cert:");
+//console.log(CERT);
 console.log(" And priv: ");
-console.log(PRIV);
+//console.log(PRIV);
 
 // Create HTTP server to handle upgrade requests
 const server = https.createServer(serverOptions, (req, res) => {

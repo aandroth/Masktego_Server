@@ -1,15 +1,22 @@
 const Websocket = require('ws');
+const fs = require('fs');
+const path = require('path');
+const filePath = path.join(__dirname, 'pems');
 const https = require('https');
+const { Console } = require('console');
 const m_port = 5000;
 const args = require('minimist')(process.argv.slice(2));
 const SERVER_NAME = args['serverName'];
-const CERT = "-----BEGIN CERTIFICATE----- \n" + args['cert'] + " \n-----END CERTIFICATE-----";
-const PRIV = "-----BEGIN PRIVATE KEY----- \n" + args['priv'] + " \n-----END PRIVATE KEY-----";  
-
-const m_allowedOrigins = [
-    'https://aquinsgreatgames.com',
-    'http://localhost:3000' // For local development
-];
+let CERT = "";
+let PRIV = "";
+if (args['cert'] != "file") {
+    CERT = "-----BEGIN CERTIFICATE----- \n" + args['cert'] + " \n-----END CERTIFICATE-----";
+    PRIV = "-----BEGIN PRIVATE KEY----- \n" + args['priv'] + " \n-----END PRIVATE KEY-----";
+}
+else {
+    CERT = fs.readFileSync(path.join(filePath, 'cert.pem')).toString();
+    PRIV = fs.readFileSync(path.join(filePath, 'privkey.pem')).toString();
+}
 
 const UPDATE_INTERVAL_TIME = 20;
 const NO_PLAYER_TIME_OUT = 120 * 1000;
@@ -42,49 +49,74 @@ const GAME_STATE = Object.freeze({
      key: PRIV
 };
 
+const m_allowedOrigins = [
+    'https://aquinsgreatgames.com',
+    'http://localhost', // For local development
+    'https://localhost' // For local development
+];
+
 console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 //console.log("With cert:");
 //console.log(CERT);
-console.log(" And priv: ");
+//console.log(" And priv: ");
 //console.log(PRIV);
 
-// Create HTTP server to handle upgrade requests
+// Create HTTPS server to handle upgrade requests
 const server = https.createServer(serverOptions, (req, res) => {
     // Handle CORS preflight for polling fallback
+    console.log("req.headers.referer : " + req.headers.referer);
     if (req.method === 'OPTIONS') {
         const origin = req.headers.origin;
-        if (m_allowedOrigins.includes(origin)) {
-            res.setHeader('Access-Control-Allow-Origin', origin);
-            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-            res.setHeader('Access-Control-Allow-Credentials', 'true');
+        console.log(`Received OPTIONS request from origin: ${origin}`);
+            if (m_allowedOrigins.includes(origin)) {
+                res.setHeader('Access-Control-Allow-Origin', origin);
+                res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+                res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+                res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+                res.writeHead(204);
+                res.end("This is the Masktego Server!");
+                return;
         }
-        res.writeHead(204);
-        res.end("This is the Masktego Server!");
-        return;
+    //
+    //if (origin == req.headers.referer) {
+    //    console.log(`Received OPTIONS request with undefined origin. Allowing for local development.`);
+    //    res.writeHead(404);
+    //    res.end("Origin is undefined");
+    //    return;
     }
+    
+    console.log("req.method === OPTIONS results as false");
     res.writeHead(404);
-    res.end();
+    res.end("Options failed");
 });
+
+//const server = https.createServer(serverOptions, (req, res) => {
+//    res.writeHead(200);
+//    res.end("This is the Masktego Server!");
+//});
+
 console.log("Server created");
 
-const wss = new Websocket.Server({
-    server: server,
-    verifyClient: (info, callback) => {
-        // For WebSocket connections, we can allow all origins since the client will handle CORS for polling fallback
-        const origin = info.origin || info.req.headers.origin;
+const wss = new Websocket.Server({ server: server });
 
-        //Check if the origin is in the allowed list
-        if (m_allowedOrigins.includes(origin)) {
-            console.log(`Connection from origin ${origin} ALLOWED.`);
-            callback(true);
-        }
-        else {
-            console.log(`Connection from origin ${origin} BLOCKED.`);
-            callback(false, 403, 'Origin not allowed');
-        }
-    }
-});
+//const wss = new Websocket.Server({
+//    server: server,
+//    verifyClient: (info, callback) => {
+//        // For WebSocket connections, we can allow all origins since the client will handle CORS for polling fallback
+//        const origin = info.origin || info.req.headers.origin;
+
+//        //Check if the origin is in the allowed list
+//        if (m_allowedOrigins.includes(origin)) {
+//            console.log(`Connection from origin ${origin} ALLOWED.`);
+//            callback(true);
+//        }
+//        else {
+//            console.log(`Connection from origin ${origin} BLOCKED.`);
+//            callback(false, 403, 'Origin not allowed');
+//        }
+//    }
+//});
 console.log("Websocket created");
 
 server.listen(m_port, () => console.log("Server listening on port " + m_port));

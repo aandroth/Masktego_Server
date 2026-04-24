@@ -66,7 +66,6 @@ console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 const server = https.createServer(serverOptions, (req, res) => {
     // Handle CORS preflight for polling fallback
     console.log("req.headers.referer : " + req.headers.referer);
-    console.log("info.origin: " + info.origin);
     if (req.method === 'OPTIONS') {
         const origin = req.headers.origin;
         console.log(`Received OPTIONS request from origin: ${origin}`);

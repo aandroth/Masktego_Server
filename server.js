@@ -51,9 +51,10 @@ const GAME_STATE = Object.freeze({
 
 const m_allowedOrigins = [
     'https://aquinsgreatgames.com',
-    'http://localhost', // For local development
+    'http://localhost:61114', // For local development
     'https://localhost' // For local development
 ];
+
 
 console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 //console.log("With cert:");
@@ -65,26 +66,28 @@ console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 const server = https.createServer(serverOptions, (req, res) => {
     // Handle CORS preflight for polling fallback
     console.log("req.headers.referer : " + req.headers.referer);
+    console.log("info.origin: " + info.origin);
     if (req.method === 'OPTIONS') {
         const origin = req.headers.origin;
         console.log(`Received OPTIONS request from origin: ${origin}`);
-            if (m_allowedOrigins.includes(origin)) {
-                res.setHeader('Access-Control-Allow-Origin', origin);
-                res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-                res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-                res.setHeader('Access-Control-Allow-Credentials', 'true');
+        if (m_allowedOrigins.includes(origin)) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-                res.writeHead(204);
-                res.end("This is the Masktego Server!");
-                return;
+            res.writeHead(204);
+            res.end("This is the Masktego Server!");
+            return;
         }
-    //
-    //if (origin == req.headers.referer) {
-    //    console.log(`Received OPTIONS request with undefined origin. Allowing for local development.`);
-    //    res.writeHead(404);
-    //    res.end("Origin is undefined");
-    //    return;
+        else {
+            console.log(`Received OPTIONS request with undefined origin. Allowing for local development.`);
+            res.writeHead(404);
+            res.end("Origin is undefined");
+            return;
+        }
     }
+
     
     console.log("req.method === OPTIONS results as false");
     res.writeHead(404);
@@ -98,25 +101,27 @@ const server = https.createServer(serverOptions, (req, res) => {
 
 console.log("Server created");
 
-const wss = new Websocket.Server({ server: server });
+//const wss = new Websocket.Server({port: 5000});
 
-//const wss = new Websocket.Server({
-//    server: server,
-//    verifyClient: (info, callback) => {
-//        // For WebSocket connections, we can allow all origins since the client will handle CORS for polling fallback
-//        const origin = info.origin || info.req.headers.origin;
+const wss = new Websocket.Server({
+    server: server,
+    //host: '0.0.0.0',  // all
+    //port: 5000,
+    verifyClient: (info, callback) => {
+        // For WebSocket connections, we can allow all origins since the client will handle CORS for polling fallback
+        const origin = info.origin || info.req.headers.origin;
 
-//        //Check if the origin is in the allowed list
-//        if (m_allowedOrigins.includes(origin)) {
-//            console.log(`Connection from origin ${origin} ALLOWED.`);
-//            callback(true);
-//        }
-//        else {
-//            console.log(`Connection from origin ${origin} BLOCKED.`);
-//            callback(false, 403, 'Origin not allowed');
-//        }
-//    }
-//});
+        //Check if the origin is in the allowed list
+        if (m_allowedOrigins.includes(origin)) {
+            console.log(`Connection from origin ${origin} ALLOWED.`);
+            callback(true);
+        }
+        else {
+            console.log(`Connection from origin ${origin} BLOCKED.`);
+            callback(false, 403, 'Origin not allowed');
+        }
+    }
+});
 console.log("Websocket created");
 
 server.listen(m_port, () => console.log("Server listening on port " + m_port));
@@ -154,7 +159,7 @@ wss.on('connection', ws => {
                 HandleMessage_Board_Update(parseInt(listedData[1]), stringData);
             }
             else {
-                console.WriteLine(`Unhandled message type: ${listedData[0]}`);
+                console.log(`Unhandled message type: ${listedData[0]}`);
             }
         });
 

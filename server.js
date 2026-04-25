@@ -65,7 +65,7 @@ console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 // Create HTTPS server to handle upgrade requests
 const server = https.createServer(serverOptions, (req, res) => {
     // Handle CORS preflight for polling fallback
-    console.log("req.headers.referer : " + req.headers.referer);
+    console.log("req: " + req);
     if (req.method === 'OPTIONS') {
         const origin = req.headers.origin;
         console.log(`Received OPTIONS request from origin: ${origin}`);

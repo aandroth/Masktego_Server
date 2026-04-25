@@ -1,4 +1,5 @@
 const Websocket = require('ws');
+const { WebSocketServer } = require('ws');
 const fs = require('fs');
 const path = require('path');
 const filePath = path.join(__dirname, 'pems');
@@ -63,43 +64,43 @@ console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 //console.log(PRIV);
 
 // Create HTTPS server to handle upgrade requests
-const server = https.createServer(serverOptions);
-//const server = https.createServer(serverOptions, (req, res) => {
-//    // Handle CORS preflight for polling fallback
-//    console.log("req: " + req.method);
+//const server = https.createServer(serverOptions);
+const server = https.createServer(serverOptions, (req, res) => {
+    // Handle CORS preflight for polling fallback
+    console.log("req: " + req.method);
 
-//    if (req.method === 'OPTIONS') {
-//        const origin = req.headers.origin;
-//        console.log(`Received OPTIONS request from origin: ${origin}`);
-//        if (m_allowedOrigins.includes(origin)) {
-//            res.setHeader('Access-Control-Allow-Origin', origin);
-//            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-//            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-//            res.setHeader('Access-Control-Allow-Credentials', 'true');
+    if (req.method === 'OPTIONS') {
+        const origin = req.headers.origin;
+        console.log(`Received OPTIONS request from origin: ${origin}`);
+        if (m_allowedOrigins.includes(origin)) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-//            res.writeHead(204);
-//            res.end("This is the Masktego Server!");
-//            return;
-//        }
-//        else {
-//            console.log(`Received OPTIONS request with undefined origin. Allowing for local development.`);
-//            res.writeHead(404);
-//            res.end("Origin is: " + origin);
-//            return;
-//        }
-//    }
+            res.writeHead(204);
+            res.end("This is the Masktego Server!");
+            return;
+        }
+        else {
+            console.log(`Received OPTIONS request with undefined origin. Allowing for local development.`);
+            res.writeHead(404);
+            res.end("Origin is: " + origin);
+            return;
+        }
+    }
 
     
-//    console.log("req.method === OPTIONS results as false");
-//    res.writeHead(404);
-//    res.end("Options failed");
-//});
+    console.log("req.method === OPTIONS results as false");
+    res.writeHead(404);
+    res.end("Options failed");
+});
 
 
 console.log("Server created");
 
 
-const wss = new Websocket.Server({
+const wss = new WebSocketServer({
     server: server,
     //host: '0.0.0.0',  // all
     //port: 5000,

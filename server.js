@@ -1,5 +1,5 @@
 const Websocket = require('ws');
-const { WebSocketServer } = require('ws');
+const { WebSocket } = require('ws');
 const fs = require('fs');
 const path = require('path');
 const filePath = path.join(__dirname, 'pems');
@@ -113,7 +113,7 @@ server.listen(5000, () => {
 //console.log("Server created");
 
 
-//const wss = new WebSocketServer({
+//const wss = new WebSocket.Server({
 //    server: server,
 //    //host: '0.0.0.0',  // all
 //    //port: 5000,

@@ -92,7 +92,7 @@ const server = https.createServer(serverOptions, (req, res) => {
     console.log("req.method === OPTIONS results as false");
     res.writeHead(404);
     res.end("Options failed");
-}).listen(m_port, () => console.log("Server listening from creation"));
+});//.listen(m_port, () => console.log("Server listening from creation"));
 
 
 console.log("Server created");
@@ -119,7 +119,6 @@ const wss = new WebSocketServer({
 });
 console.log("Websocket created");
 
-server.listen(m_port, () => console.log("Server listening on port " + m_port));
 
 wss.on('connection', ws => {
     console.log(`Client connected!`);
@@ -166,6 +165,8 @@ wss.on('connection', ws => {
     }
 });
 console.log("Websocket set");
+
+server.listen(m_port, () => console.log("Server listening on port " + m_port));
 
 function SendMessageToClient(ws, messageAction = "", messageData = {}) {
     if (messageAction == "") {

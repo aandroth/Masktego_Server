@@ -58,113 +58,128 @@ const m_allowedOrigins = [
 
 
 console.log("Server " + SERVER_NAME + " has started on port " + m_port);
+
+const server = https.createServer(serverOptions);
+
+const wss = new WebSocket.Server({ server });
+
+wss.on('connection', (ws) => {
+    console.log('Client connected securely!');
+    ws.on('message', (msg) => console.log(`Received: ${msg}`));
+});
+
+server.listen(5000, () => {
+    console.log('WSS server running on port 5000');
+});
+
+
 //console.log("With cert:");
 //console.log(CERT);
 //console.log(" And priv: ");
 //console.log(PRIV);
 
-// Create HTTPS server to handle upgrade requests
-//const server = https.createServer(serverOptions);
-const server = https.createServer(serverOptions, (req, res) => {
-    // Handle CORS preflight for polling fallback
-    console.log("req: " + req.method);
+//// Create HTTPS server to handle upgrade requests
+////const server = https.createServer(serverOptions);
+//const server = https.createServer(serverOptions, (req, res) => {
+//    // Handle CORS preflight for polling fallback
+//    console.log("req: " + req.method);
 
-    if (req.method === 'OPTIONS') {
-        const origin = req.headers.origin;
-        console.log(`Received OPTIONS request from origin: ${origin}`);
-        if (m_allowedOrigins.includes(origin)) {
-            res.setHeader('Access-Control-Allow-Origin', origin);
-            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-            res.setHeader('Access-Control-Allow-Credentials', 'true');
+//    if (req.method === 'OPTIONS') {
+//        const origin = req.headers.origin;
+//        console.log(`Received OPTIONS request from origin: ${origin}`);
+//        if (m_allowedOrigins.includes(origin)) {
+//            res.setHeader('Access-Control-Allow-Origin', origin);
+//            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+//            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+//            res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-            res.writeHead(204);
-            res.end("This is the Masktego Server!");
-            return;
-        }
-        else {
-            console.log(`Received OPTIONS request with undefined origin. Allowing for local development.`);
-            res.writeHead(404);
-            res.end("Origin is: " + origin);
-            return;
-        }
-    }
-    console.log("req.method === OPTIONS results as false");
-    res.writeHead(404);
-    res.end("Options failed");
-}).listen(m_port, () => console.log("Server listening from creation"));
-
-
-console.log("Server created");
+//            res.writeHead(204);
+//            res.end("This is the Masktego Server!");
+//            return;
+//        }
+//        else {
+//            console.log(`Received OPTIONS request with undefined origin. Allowing for local development.`);
+//            res.writeHead(404);
+//            res.end("Origin is: " + origin);
+//            return;
+//        }
+//    }
+//    console.log("req.method === OPTIONS results as false");
+//    res.writeHead(404);
+//    res.end("Options failed");
+//});
 
 
-const wss = new WebSocketServer({
-    server: server,
-    //host: '0.0.0.0',  // all
-    //port: 5000,
-    verifyClient: (info, callback) => {
-        // For WebSocket connections, we can allow all origins since the client will handle CORS for polling fallback
-        const origin = info.origin || info.req.headers.origin;
-
-        //Check if the origin is in the allowed list
-        if (m_allowedOrigins.includes(origin)) {
-            console.log(`Connection from origin ${origin} ALLOWED.`);
-            callback(true);
-        }
-        else {
-            console.log(`Connection from origin ${origin} BLOCKED.`);
-            callback(false, 403, 'Origin not allowed');
-        }
-    }
-});
-console.log("Websocket created");
+//console.log("Server created");
 
 
-wss.on('connection', ws => {
-    console.log(`Client connected!`);
-    var id = -1;
-    if (m_orangePlayer == -1) {
-        m_orangePlayer = 1;
-        id = 1;
-    }
-    else if (m_purplePlayer == -1) {
-        m_purplePlayer = 2;
-        id = 2;
-    }
-    ws.id = id;
+//const wss = new WebSocketServer({
+//    server: server,
+//    //host: '0.0.0.0',  // all
+//    //port: 5000,
+//    verifyClient: (info, callback) => {
+//        // For WebSocket connections, we can allow all origins since the client will handle CORS for polling fallback
+//        const origin = info.origin || info.req.headers.origin;
 
-    HandleMessage_initial(ws, id);
-    if (id != -1) {
-        m_noPlayerCountUp = 0;
+//        //Check if the origin is in the allowed list
+//        if (m_allowedOrigins.includes(origin)) {
+//            console.log(`Connection from origin ${origin} ALLOWED.`);
+//            callback(true);
+//        }
+//        else {
+//            console.log(`Connection from origin ${origin} BLOCKED.`);
+//            callback(false, 403, 'Origin not allowed');
+//        }
+//    }
+//});
+//console.log("Websocket created");
 
-        ws.on("message", data => {
-            var stringData = `${data}`;
-            var listedData = stringData.split(',');
-            if (listedData[0] != "Ping")
-                console.log(`Received Message: ${stringData}`);
 
-            if (listedData[0] == "Ping") {
-                HandleMessage_ping(ws);
-            }
-            else if (listedData[0] == "Player_Swapped") {
-                HandleMessage_Player_Swapped(parseInt(listedData[1]), listedData);
-            }
-            else if (listedData[0] == "Board_Update") {
-                HandleMessage_Board_Update(parseInt(listedData[1]), stringData);
-            }
-            else {
-                console.log(`Unhandled message type: ${listedData[0]}`);
-            }
-        });
+//wss.on('connection', ws => {
+//    console.log(`Client connected!`);
+//    var id = -1;
+//    if (m_orangePlayer == -1) {
+//        m_orangePlayer = 1;
+//        id = 1;
+//    }
+//    else if (m_purplePlayer == -1) {
+//        m_purplePlayer = 2;
+//        id = 2;
+//    }
+//    ws.id = id;
 
-        ws.on("close", () => {
-            console.log("Client disconnected!");
-            if (id == 1) { m_orangePlayer = -1; id = -1; }
-            if (id == 2) { m_purplePlayer = -1; id = -1; }
-        });
-    }
-});
-console.log("Websocket set");
+//    HandleMessage_initial(ws, id);
+//    if (id != -1) {
+//        m_noPlayerCountUp = 0;
+
+//        ws.on("message", data => {
+//            var stringData = `${data}`;
+//            var listedData = stringData.split(',');
+//            if (listedData[0] != "Ping")
+//                console.log(`Received Message: ${stringData}`);
+
+//            if (listedData[0] == "Ping") {
+//                HandleMessage_ping(ws);
+//            }
+//            else if (listedData[0] == "Player_Swapped") {
+//                HandleMessage_Player_Swapped(parseInt(listedData[1]), listedData);
+//            }
+//            else if (listedData[0] == "Board_Update") {
+//                HandleMessage_Board_Update(parseInt(listedData[1]), stringData);
+//            }
+//            else {
+//                console.log(`Unhandled message type: ${listedData[0]}`);
+//            }
+//        });
+
+//        ws.on("close", () => {
+//            console.log("Client disconnected!");
+//            if (id == 1) { m_orangePlayer = -1; id = -1; }
+//            if (id == 2) { m_purplePlayer = -1; id = -1; }
+//        });
+//    }
+//});
+//console.log("Websocket set");
 
 //server.listen(m_port, () => console.log("Server listening on port " + m_port));
 

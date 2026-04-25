@@ -66,6 +66,9 @@ console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 const server = https.createServer(serverOptions, (req, res) => {
     // Handle CORS preflight for polling fallback
     console.log("req: " + req.method);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
 
     if (req.method === 'OPTIONS') {
         const origin = req.headers.origin;
@@ -94,14 +97,9 @@ const server = https.createServer(serverOptions, (req, res) => {
     res.end("Options failed");
 });
 
-//const server = https.createServer(serverOptions, (req, res) => {
-//    res.writeHead(200);
-//    res.end("This is the Masktego Server!");
-//});
 
 console.log("Server created");
 
-//const wss = new Websocket.Server({port: 5000});
 
 const wss = new Websocket.Server({
     server: server,

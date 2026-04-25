@@ -66,7 +66,6 @@ console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 const server = https.createServer(serverOptions, (req, res) => {
     // Handle CORS preflight for polling fallback
     console.log("req: ");
-    console.log(JSON.stringify(req));
 
     if (req.method === 'OPTIONS') {
         const origin = req.headers.origin;
@@ -84,7 +83,7 @@ const server = https.createServer(serverOptions, (req, res) => {
         else {
             console.log(`Received OPTIONS request with undefined origin. Allowing for local development.`);
             res.writeHead(404);
-            res.end("Origin is undefined");
+            res.end("Origin is: " + origin);
             return;
         }
     }

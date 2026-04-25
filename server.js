@@ -89,12 +89,10 @@ const server = https.createServer(serverOptions, (req, res) => {
             return;
         }
     }
-
-    
     console.log("req.method === OPTIONS results as false");
     res.writeHead(404);
     res.end("Options failed");
-});
+}).listen(m_port, () => console.log("Server listening from creation"));
 
 
 console.log("Server created");

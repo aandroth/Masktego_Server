@@ -49,7 +49,7 @@ const GAME_STATE = Object.freeze({
  const serverOptions = {
     cert: CERT,
      key: PRIV,
-     host: "masktego.aquinsgreatgames"
+     hostname: "masktego.aquinsgreatgames"
 };
 
 const m_allowedOrigins = [

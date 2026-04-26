@@ -63,16 +63,16 @@ console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 
 const server = https.createServer(serverOptions);
 
-const wss = new WebSocket.Server({ server: server });
+const wss = new WebSocket.Server({ server: server, rejectUnauthorized: false });
 
 wss.on('connection', (ws) => {
     console.log('Client connected securely!');
     ws.on('message', (msg) => console.log(`Received: ${msg}`));
 });
 
-server.listen(5000, () => {
-    console.log('WSS server running on port 5000');
-});
+//server.listen(5000, () => {
+//    console.log('WSS server running on port 5000');
+//});
 
 
 //console.log("With cert:");

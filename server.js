@@ -70,9 +70,9 @@ wss.on('connection', (ws) => {
     ws.on('message', (msg) => console.log(`Received: ${msg}`));
 });
 
-//server.listen(5000, () => {
-//    console.log('WSS server running on port 5000');
-//});
+server.listen(5000, () => {
+    console.log('WSS server running on port 5000');
+});
 
 
 //console.log("With cert:");

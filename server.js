@@ -11,11 +11,12 @@ const SERVER_NAME = args['serverName'];
 let CERT = "";
 let PRIV = "";
 if (args['cert'] != "file") {
-    CERT = "-----BEGIN CERTIFICATE----- \n" + args['cert'] + " \n-----END CERTIFICATE-----";
+    CERT = "-----BEGIN CERTIFICATE----- \n" + args['cert0'] + " \n-----END CERTIFICATE----- \n" +
+            "-----BEGIN CERTIFICATE----- \n" + args['cert1'] + " \n-----END CERTIFICATE-----";
     PRIV = "-----BEGIN PRIVATE KEY----- \n" + args['priv'] + " \n-----END PRIVATE KEY-----";
 }
 else {
-    CERT = fs.readFileSync(path.join(filePath, 'cert.pem')).toString();
+    CERT = fs.readFileSync(path.join(filePath, 'fullchain.pem')).toString();
     PRIV = fs.readFileSync(path.join(filePath, 'privkey.pem')).toString();
 }
 

@@ -3,6 +3,7 @@ const { WebSocket } = require('ws');
 const fs = require('fs');
 const path = require('path');
 const filePath = path.join(__dirname, 'pems');
+//const https = require('https');
 const https = require('https');
 const { Console } = require('console');
 const m_port = 5000;
@@ -10,15 +11,8 @@ const args = require('minimist')(process.argv.slice(2));
 const SERVER_NAME = args['serverName'];
 let CERT = "";
 let PRIV = "";
-if (args['cert'] != "file") {
-    CERT = "-----BEGIN CERTIFICATE----- \n" + args['cert0'] + " \n-----END CERTIFICATE----- \n" +
-            "-----BEGIN CERTIFICATE----- \n" + args['cert1'] + " \n-----END CERTIFICATE-----";
-    PRIV = "-----BEGIN PRIVATE KEY----- \n" + args['priv'] + " \n-----END PRIVATE KEY-----";
-}
-else {
-    CERT = fs.readFileSync(path.join(filePath, 'fullchain.pem')).toString();
-    PRIV = fs.readFileSync(path.join(filePath, 'privkey.pem')).toString();
-}
+
+
 
 const UPDATE_INTERVAL_TIME = 20;
 const NO_PLAYER_TIME_OUT = 120 * 1000;
@@ -83,36 +77,39 @@ server.listen(5000, () => {
 //console.log(" And priv: ");
 //console.log(PRIV);
 
-//// Create HTTPS server to handle upgrade requests
-////const server = https.createServer(serverOptions);
-//const server = https.createServer(serverOptions, (req, res) => {
-//    // Handle CORS preflight for polling fallback
-//    console.log("req: " + req.method);
+// Create HTTPS server to handle upgrade requests
+//const server = https.createServer(serverOptions);
+const server = http.createServer((req, res) => {
 
-//    if (req.method === 'OPTIONS') {
-//        const origin = req.headers.origin;
-//        console.log(`Received OPTIONS request from origin: ${origin}`);
-//        if (m_allowedOrigins.includes(origin)) {
-//            res.setHeader('Access-Control-Allow-Origin', origin);
-//            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-//            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-//            res.setHeader('Access-Control-Allow-Credentials', 'true');
+    console.log("req: " + req.method);
 
-//            res.writeHead(204);
-//            res.end("This is the Masktego Server!");
-//            return;
-//        }
-//        else {
-//            console.log(`Received OPTIONS request with undefined origin. Allowing for local development.`);
-//            res.writeHead(404);
-//            res.end("Origin is: " + origin);
-//            return;
-//        }
-//    }
-//    console.log("req.method === OPTIONS results as false");
-//    res.writeHead(404);
-//    res.end("Options failed");
-//});
+    if (req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            try {
+                // Parse the raw string into a JavaScript Object
+                const jsonData = JSON.parse(body);
+
+                console.log('Received JSON:', jsonData);
+
+                // Send a successful response back to the client
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ message: 'Data received successfully!', data: jsonData }));
+            } catch (error) {
+                // Handle invalid JSON payload errors
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid JSON format' }));
+            }
+        });
+    }
+    else {
+        res.writeHead(404);
+        res.end("call failed");
+    }
+});
 
 
 //console.log("Server created");

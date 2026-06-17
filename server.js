@@ -55,7 +55,7 @@ const m_allowedOrigins = [
 
 console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 
-const server = https.createServer(serverOptions);
+//const server = https.createServer(serverOptions);
 
 const wss = new WebSocket.Server({
     server: server,

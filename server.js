@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const filePath = path.join(__dirname, 'pems');
 //const https = require('https');
-const https = require('https');
+const http = require('http');
 const { Console } = require('console');
 const m_port = 5000;
 const args = require('minimist')(process.argv.slice(2));
@@ -57,19 +57,16 @@ console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 
 //const server = https.createServer(serverOptions);
 
-const wss = new WebSocket.Server({
-    server: server,
-    rejectUnauthorized: false
-});
+//const wss = new WebSocket.Server({
+//    server: server,
+//    rejectUnauthorized: false
+//});
 
-wss.on('connection', (ws) => {
-    console.log('Client connected securely!');
-    ws.on('message', (msg) => console.log(`Received: ${msg}`));
-});
+//wss.on('connection', (ws) => {
+//    console.log('Client connected securely!');
+//    ws.on('message', (msg) => console.log(`Received: ${msg}`));
+//});
 
-server.listen(5000, () => {
-    console.log('WSS server running on port 5000');
-});
 
 
 //console.log("With cert:");
@@ -109,6 +106,8 @@ const server = http.createServer((req, res) => {
         res.writeHead(404);
         res.end("call failed");
     }
+}).listen(5000, () => {
+    console.log('server running on port 5000');
 });
 
 

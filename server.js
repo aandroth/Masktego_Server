@@ -1,3 +1,17 @@
+const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
+const client = new LambdaClient({ region: "us-west-2" });
+
+const command = new InvokeCommand({
+  FunctionName: "MyLambdaFunction",
+  Payload: JSON.stringify({ key: "value" }), // Your event payload
+});
+
+const response = await client.send(command);
+const result = Buffer.from(response.Payload).toString();
+console.log(result);
+
+
+
 const Websocket = require('ws');
 const { WebSocket } = require('ws');
 const fs = require('fs');
@@ -8,17 +22,20 @@ const http = require('http');
 const { Console } = require('console');
 const m_port = 5000;
 const args = require('minimist')(process.argv.slice(2));
-const SERVER_NAME = args['serverName'];
 let CERT = "";
 let PRIV = "";
-
-
 
 const UPDATE_INTERVAL_TIME = 20;
 const NO_PLAYER_TIME_OUT = 120 * 1000;
 
 var m_orangePlayer = -1;
 var m_purplePlayer = -1;
+
+const SERVER_NAME = args['serverName'];
+const WEBSOCKET_COMM_FUNC = args['websocketCommFunc'];
+const CALLBACK_URL = args['callbackUrl'];
+var m_orangePlayerConnectionId = args['player1'];
+var m_purplePlayerConnectionId = args['player2'];
 
 let m_noPlayerCountUp = 0.0;
 let m_CurrGameTime = Date.now();
@@ -54,36 +71,38 @@ const m_allowedOrigins = [
 
 
 console.log("Server " + SERVER_NAME + " has started on port " + m_port);
+console.log("WEBSOCKET_COMM_FUNC: " + WEBSOCKET_COMM_FUNC);
 
-//const server = https.createServer(serverOptions);
-
-//const wss = new WebSocket.Server({
-//    server: server,
-//    rejectUnauthorized: false
-//});
-
-//wss.on('connection', (ws) => {
-//    console.log('Client connected securely!');
-//    ws.on('message', (msg) => console.log(`Received: ${msg}`));
-//});
-
-
-
-//console.log("With cert:");
-//console.log(CERT);
-//console.log(" And priv: ");
-//console.log(PRIV);
-
-// Create HTTPS server to handle upgrade requests
-//const server = https.createServer(serverOptions);
 const server = http.createServer((req, res) => {
 
     console.log("req: " + req.method);
 
     if (req.method === 'POST') {
         let body = '';
-        req.on('data', chunk => {
-            body += chunk.toString();
+        req.on('message', () => {
+            const data = JSON.parse(body);
+
+            var stringData = `${data}`;
+            var listedData = stringData.split(',');
+
+            if (listedData[0] != "Ping")
+                console.log(`Received Message: ${stringData}`);
+
+            if (listedData[0] == "Ping") {
+                HandleMessage_ping(ws);
+            }
+            else if (listedData[0] == "Player_Joined") {
+                HandleMessage_Player_Joined(parseInt(listedData[1]), listedData);
+            }
+            else if (listedData[0] == "Player_Swapped") {
+                HandleMessage_Player_Swapped(parseInt(listedData[1]), listedData);
+            }
+            else if (listedData[0] == "Board_Update") {
+                HandleMessage_Board_Update(parseInt(listedData[1]), stringData);
+            }
+            else {
+                console.log(`Unhandled message type: ${listedData[0]}`);
+            }
         });
         req.on('end', () => {
             try {
@@ -109,6 +128,222 @@ const server = http.createServer((req, res) => {
 }).listen(5000, () => {
     console.log('server running on port 5000');
 });
+
+function SendMessageToClient(connectionId, messageAction = "", message = {}) {
+    if (messageAction == "") {
+        console.log(`Message to Client must have a type!`);
+        return;
+    }
+    messageData = {};
+    messageData.route = "message";
+    messageData.msgType = "gameController";
+    messageData.action = messageAction;
+    messageData.message = message;
+    var messageToClient = JSON.stringify(messageData);
+
+    var dataToFunction = {
+        data: messageToClient,
+        callbackUrl: CALLBACK_URL,
+        connectionId: if()
+    }
+
+    const params = {
+        FunctionName: WEBSOCKET_COMM_FUNC,
+        // Payload must be converted to a Uint8Array / Buffer in SDK v3
+        Payload: Buffer.from(JSON.stringify(dataToFunction)),
+        InvocationType: "Event" // Use 'Event' for asynchronous fire-and-forget
+    };
+
+    try {
+        const command = new InvokeCommand(params);
+        const response = await lambdaClient.send(command);
+    } catch (error) {
+        console.error("Error invoking Lambda:", error);
+        throw error;
+    }
+}
+function SendMessageToAllClients(messageAction = "", messageData = {}, idOfSendingPlayer = -1) { // -1 means send to all
+    if (messageAction == "") {
+        console.log(`Message to Client must have a type!`);
+        return;
+    }
+
+    messageData = {};
+    messageData.route = "message";
+    messageData.msgType = "gameController";
+    messageData.action = messageAction;
+    messageData.message = message;
+    var messageToClient = JSON.stringify(messageData);
+
+    for (var i = 1; i <= 2; ++i) {
+        if (i == idOfSendingPlayer) // We skip data sent by the player that sent it, as they already have the data.
+            continue;
+
+        var dataToFunction = {
+            data: messageToClient,
+            callbackUrl: CALLBACK_URL,
+            connectionId: i
+        }
+
+        const params = {
+            FunctionName: WEBSOCKET_COMM_FUNC,
+            // Payload must be converted to a Uint8Array / Buffer in SDK v3
+            Payload: Buffer.from(JSON.stringify(dataToFunction)),
+            InvocationType: "RequestResponse" // Use 'Event' for asynchronous fire-and-forget
+        };
+
+        try {
+            const command = new InvokeCommand(params);
+            const response = await lambdaClient.send(command);
+            console.log(`Message sent to player ${i}: ${messageToClient}, with response: ${JSON.stringify(response)}`);
+        } catch (error) {
+            console.error("Error invoking Lambda:", error);
+            throw error;
+        }
+    }
+}
+
+const HandleMessage_initial = (id) => {
+
+    console.log(`Sending: Init,${id}`);
+    let messageData = {
+        action: "player_init",
+        message: `Init,${id}`
+    }
+    //SendMessageToClient(messageData);
+    SendMessageToAllClients("player_init", messageData);
+    //SendMessageToAllClients("Player_Join", messageData); Might need this...
+}
+
+
+const HandleMessage_ping = () => {
+    let messageData = {
+        action: "ping",
+        message: `ping`
+    }
+    //SendMessageToClient(messageData);
+    SendMessageToAllClients("ping", messageData);
+}
+
+
+//const HandleMessage_Player_Joined = (id, listedData) => {
+////"Action, playerId, connectionId
+////      0,        1,            2
+//    console.log(`Player ${id} is joining.`);
+//    m_playerReadinessDictionary.set(id, true);
+//    if (m_orangePlayer == -1) {
+//        m_orangePlayer = 1;
+//        m_orangePlayerConnectionId = Number(listedData[2]);
+//    }
+//    else if (m_purplePlayer == -1) {
+//        m_purplePlayer = 2;
+//        m_purplePlayerConnectionId = Number(listedData[2]);
+//    }
+//    let messageData = {
+//        action: "Player_Join",
+//        message: `${id}}`
+//    }
+//    SendMessageToAllClients("Player_Join", messageData);
+
+//    if (m_playerReadinessDictionary.size == 2) {
+//        SendMessageToAllClients("Player_1_Turn", "Player_1_Turn");
+//        m_playerReadinessDictionary = new Map();
+//    }
+//    SendMessageToClient(messageData);
+//}
+
+
+const HandleMessage_Player_Swapped = (id, listedData) => {
+//"Action, playerId, pos0.x | pos0.y, pos1.x | pos1.y
+//      0,        1,               2,               3
+    console.log(`Player ${id} has swapped.`);
+    m_playerReadinessDictionary.set(id, true);
+    let messageData = {
+        action: "Board_Update",
+        message: `${listedData[1]},${listedData[2]},${listedData[3]}`
+    }
+    SendMessageToAllClients("Board_Update", messageData, id);
+
+    if (m_playerReadinessDictionary.size == 2) {
+        SendMessageToAllClients("Player_1_Turn", "Player_1_Turn");
+        m_playerReadinessDictionary = new Map();
+    }
+
+
+    //SendMessageToClient(messageData);
+}
+
+const HandleMessage_Board_Update = (id, stringData) => {
+    console.log(`Player ${id} sent board update.`);
+
+    //"Action, playerId, pos0.x | pos0.y, pos1.x | pos1.y
+    //      0,        1,               2,               3
+    SendMessageToAllClients("Board_Update", stringData, id);
+}
+
+
+//let ccc = 0;
+async function ServerUpdate() {
+
+    let deltaTime = Date.now() - m_CurrGameTime;
+    m_CurrGameTime = Date.now();
+    if (m_orangePlayer == -1 && m_purplePlayer == -1) {
+        m_noPlayerCountUp += deltaTime;
+        //console.log(`No players connected for ${m_noPlayerCountUp * 0.001} seconds.`);
+        if (m_noPlayerCountUp >= NO_PLAYER_TIME_OUT) {
+            console.log(`No players connected for ${m_noPlayerCountUp * 0.001} seconds. Shutting down server.`);
+            process.exit();
+        }
+    }
+}
+
+const HandleMessage_killGame = (data) => {
+    console.log(`data: ${data}`);
+    console.log(`Killing game server`);
+    SendMessageToAllClients("load_level", `Load_Level,0`);
+    process.exit();
+}
+
+///////////////////////////////////////////////////////////////////////
+
+//m_intervalUpdateId = setInterval(() => ServerUpdate(), UPDATE_INTERVAL_TIME);
+//ServerUpdate();
+
+//async function getData() {
+//    try {
+//        const response = await fetch('https://example.com');
+//        if (!response.ok) {
+//            throw new Error(`HTTP error! status: ${response.status}`);
+//        }
+//        const data = await response.json();
+//        console.log(data);
+//    } catch (error) {
+//        console.error('Error fetching data:', error);
+//    }
+//}
+
+//getData();
+
+
+
+//const server = https.createServer(serverOptions);
+
+//const wss = new WebSocket.Server({
+//    server: server,
+//    rejectUnauthorized: false
+//});
+
+//wss.on('connection', (ws) => {
+//    console.log('Client connected securely!');
+//    ws.on('message', (msg) => console.log(`Received: ${msg}`));
+//});
+
+
+
+//console.log("With cert:");
+//console.log(CERT);
+//console.log(" And priv: ");
+//console.log(PRIV);
 
 
 //console.log("Server created");
@@ -183,98 +418,3 @@ const server = http.createServer((req, res) => {
 //console.log("Websocket set");
 
 //server.listen(m_port, () => console.log("Server listening on port " + m_port));
-
-function SendMessageToClient(ws, messageAction = "", messageData = {}) {
-    if (messageAction == "") {
-        console.log(`Message to Client must have a type!`);
-        return;
-    }
-    messageData.action = messageAction;
-    var messageToClient = JSON.stringify(messageData);
-    ws.send(messageToClient);
-}
-function SendMessageToAllClients(messageAction = "", messageData = {}, idOfSendingPlayer = -1) { // -1 means send to all
-    if (messageAction == "") {
-        console.log(`Message to Client must have a type!`);
-        return;
-    }
-    var messageToClient = JSON.stringify(messageData);
-    //console.log(`SendMessageToAllClients: ${messageToClient}`);
-    wss.clients.forEach(client => { if (client.id != idOfSendingPlayer) client.send(messageToClient); });
-}
-
-const HandleMessage_initial = (ws, id) => {
-
-    console.log(`Sending: Init,${ id }`);
-    SendMessageToClient(ws, "player_init", `Init,${id}`);
-}
-
-
-const HandleMessage_ping = (ws) => {
-    SendMessageToClient(ws, "Ping", "Ping");
-}
-
-
-const HandleMessage_Player_Swapped = (id, listedData) => {
-//"Action, playerId, pos0.x | pos0.y, pos1.x | pos1.y
-//      0,        1,               2,               3
-    console.log(`Player ${id} has swapped.`);
-    m_playerReadinessDictionary.set(id, true);
-    SendMessageToAllClients("Board_Update", `Board_Update,${listedData[1]},${listedData[2]},${listedData[3]}`, id);
-
-    if (m_playerReadinessDictionary.size == 2) {
-        SendMessageToAllClients("Player_1_Turn", "Player_1_Turn");
-        m_playerReadinessDictionary = new Map();
-    }
-}
-
-const HandleMessage_Board_Update = (id, stringData) => {
-    console.log(`Player ${id} sent board update.`);
-
-    //"Action, playerId, pos0.x | pos0.y, pos1.x | pos1.y
-    //      0,        1,               2,               3
-    SendMessageToAllClients("Board_Update", stringData, id);
-}
-
-
-//let ccc = 0;
-async function ServerUpdate() {
-
-    let deltaTime = Date.now() - m_CurrGameTime;
-    m_CurrGameTime = Date.now();
-    if (m_orangePlayer == -1 && m_purplePlayer == -1) {
-        m_noPlayerCountUp += deltaTime;
-        //console.log(`No players connected for ${m_noPlayerCountUp * 0.001} seconds.`);
-        if (m_noPlayerCountUp >= NO_PLAYER_TIME_OUT) {
-            console.log(`No players connected for ${m_noPlayerCountUp * 0.001} seconds. Shutting down server.`);
-            process.exit();
-        }
-    }
-}
-
-const HandleMessage_killGame = (data) => {
-    console.log(`data: ${data}`);
-    console.log(`Killing game server`);
-    SendMessageToAllClients("load_level", `Load_Level,0`);
-    process.exit();
-}
-
-///////////////////////////////////////////////////////////////////////
-
-//m_intervalUpdateId = setInterval(() => ServerUpdate(), UPDATE_INTERVAL_TIME);
-//ServerUpdate();
-
-//async function getData() {
-//    try {
-//        const response = await fetch('https://example.com');
-//        if (!response.ok) {
-//            throw new Error(`HTTP error! status: ${response.status}`);
-//        }
-//        const data = await response.json();
-//        console.log(data);
-//    } catch (error) {
-//        console.error('Error fetching data:', error);
-//    }
-//}
-
-//getData();

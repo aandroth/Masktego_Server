@@ -1,5 +1,5 @@
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
-const client = new LambdaClient({ region: "us-west-2" });
+const lambdaClient = new LambdaClient({ region: "us-west-2" });
 
 const Websocket = require('ws');
 const { WebSocket } = require('ws');
@@ -53,7 +53,6 @@ const GAME_STATE = Object.freeze({
 };
 
 const m_allowedOrigins = [
-    'https://aquinsgreatgames.com',
     'http://localhost:61114', // For local development
     'https://localhost' // For local development
 ];
@@ -155,7 +154,7 @@ async function SendMessageToClient(clientConnectionId, messageAction = "", messa
         throw error;
     }
 }
-async function SendMessageToAllClients(messageAction = "", messageData = {}, idOfSendingPlayer = -1) { // -1 means send to all
+async function SendMessageToAllClients(messageAction = "", messageObj = {}, idOfSendingPlayer = -1) { // -1 means send to all
     if (messageAction == "") {
         console.log(`Message to Client must have a type!`);
         return;
@@ -165,8 +164,8 @@ async function SendMessageToAllClients(messageAction = "", messageData = {}, idO
     messageData.route = "message";
     messageData.msgType = "gameController";
     messageData.action = messageAction;
-    messageData.message = message;
-    var messageToClient = JSON.stringify(messageData);
+    messageData.message = messageObj;
+    var messageToClient = messageData;
 
     for (var i = 1; i <= 2; ++i) {
         if (i == idOfSendingPlayer) // We skip data sent by the player that sent it, as they already have the data.
@@ -196,12 +195,12 @@ async function SendMessageToAllClients(messageAction = "", messageData = {}, idO
     }
 }
 
-const HandleMessage_initial = (id) => {
+const HandleMessage_initial = () => {
 
-    console.log(`Sending: Init,${id}`);
+    console.log(`Sending: Init to players`);
     let messageData = {
         action: "player_init",
-        message: `Init,${id}`
+        message: `Init`
     }
     //SendMessageToClient(messageData);
     SendMessageToAllClients("player_init", messageData);
@@ -217,6 +216,8 @@ const HandleMessage_ping = () => {
     //SendMessageToClient(messageData);
     SendMessageToAllClients("ping", messageData);
 }
+
+HandleMessage_initial();
 
 
 //const HandleMessage_Player_Joined = (id, listedData) => {

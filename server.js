@@ -1,17 +1,6 @@
 const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
 const client = new LambdaClient({ region: "us-west-2" });
 
-const command = new InvokeCommand({
-  FunctionName: "MyLambdaFunction",
-  Payload: JSON.stringify({ key: "value" }), // Your event payload
-});
-
-const response = await client.send(command);
-const result = Buffer.from(response.Payload).toString();
-console.log(result);
-
-
-
 const Websocket = require('ws');
 const { WebSocket } = require('ws');
 const fs = require('fs');
@@ -72,6 +61,9 @@ const m_allowedOrigins = [
 
 console.log("Server " + SERVER_NAME + " has started on port " + m_port);
 console.log("WEBSOCKET_COMM_FUNC: " + WEBSOCKET_COMM_FUNC);
+console.log("CALLBACK_URL: " + CALLBACK_URL);
+console.log("m_orangePlayerConnectionId: " + m_orangePlayerConnectionId);
+console.log("m_purplePlayerConnectionId: " + m_purplePlayerConnectionId);
 
 const server = http.createServer((req, res) => {
 
@@ -163,7 +155,7 @@ async function SendMessageToClient(clientConnectionId, messageAction = "", messa
         throw error;
     }
 }
-function SendMessageToAllClients(messageAction = "", messageData = {}, idOfSendingPlayer = -1) { // -1 means send to all
+async function SendMessageToAllClients(messageAction = "", messageData = {}, idOfSendingPlayer = -1) { // -1 means send to all
     if (messageAction == "") {
         console.log(`Message to Client must have a type!`);
         return;

@@ -129,7 +129,7 @@ const server = http.createServer((req, res) => {
     console.log('server running on port 5000');
 });
 
-function SendMessageToClient(connectionId, messageAction = "", message = {}) {
+async function SendMessageToClient(clientConnectionId, messageAction = "", message = {}) {
     if (messageAction == "") {
         console.log(`Message to Client must have a type!`);
         return;
@@ -144,7 +144,7 @@ function SendMessageToClient(connectionId, messageAction = "", message = {}) {
     var dataToFunction = {
         data: messageToClient,
         callbackUrl: CALLBACK_URL,
-        connectionId: if()
+        connectionId: clientConnectionId
     }
 
     const params = {
@@ -157,6 +157,7 @@ function SendMessageToClient(connectionId, messageAction = "", message = {}) {
     try {
         const command = new InvokeCommand(params);
         const response = await lambdaClient.send(command);
+        console.log(`Message sent to player ${clientConnectionId}: ${messageToClient}, with response: ${JSON.stringify(response)}`);
     } catch (error) {
         console.error("Error invoking Lambda:", error);
         throw error;

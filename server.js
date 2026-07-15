@@ -1,5 +1,5 @@
-const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
-const lambdaClient = new LambdaClient({ region: "us-west-2" });
+//const { LambdaClient, InvokeCommand } = require("@aws-sdk/client-lambda");
+//const lambdaClient = new LambdaClient({ region: "us-west-2" });
 
 const Websocket = require('ws');
 const { WebSocket } = require('ws');
@@ -46,11 +46,11 @@ const GAME_STATE = Object.freeze({
 });
 
 
- const serverOptions = {
-    cert: CERT,
-     key: PRIV,
-     hostname: "masktego.aquinsgreatgames.com"
-};
+// const serverOptions = {
+//    cert: CERT,
+//     key: PRIV,
+//     hostname: "masktego.aquinsgreatgames.com"
+//};
 
 const m_allowedOrigins = [
     'http://localhost:61114', // For local development
@@ -137,21 +137,25 @@ async function SendMessageToClient(clientConnectionId, messageAction = "", messa
         callbackUrl: CALLBACK_URL,
         connectionId: clientConnectionId
     }
-
-    const params = {
-        FunctionName: WEBSOCKET_COMM_FUNC,
-        // Payload must be converted to a Uint8Array / Buffer in SDK v3
-        Payload: Buffer.from(JSON.stringify(dataToFunction)),
-        InvocationType: "Event" // Use 'Event' for asynchronous fire-and-forget
-    };
-
+    
     try {
-        const command = new InvokeCommand(params);
-        const response = await lambdaClient.send(command);
-        console.log(`Message sent to player ${clientConnectionId}: ${messageToClient}, with response: ${JSON.stringify(response)}`);
+        const response = await fetch(WEBSOCKET_COMM_FUNC, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToFunction),
+        });
+
+        // Always check response.ok because fetch won't reject on standard HTTP errors (like 404 or 500)
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Success:', data);
     } catch (error) {
-        console.error("Error invoking Lambda:", error);
-        throw error;
+        console.error('Error during POST request:', error);
     }
 }
 async function SendMessageToAllClients(messageAction = "", messageObj = {}, idOfSendingPlayer = -1) { // -1 means send to all
@@ -177,20 +181,24 @@ async function SendMessageToAllClients(messageAction = "", messageObj = {}, idOf
             connectionId: i
         }
 
-        const params = {
-            FunctionName: WEBSOCKET_COMM_FUNC,
-            // Payload must be converted to a Uint8Array / Buffer in SDK v3
-            Payload: Buffer.from(JSON.stringify(dataToFunction)),
-            InvocationType: "RequestResponse" // Use 'Event' for asynchronous fire-and-forget
-        };
-
         try {
-            const command = new InvokeCommand(params);
-            const response = await lambdaClient.send(command);
-            console.log(`Message sent to player ${i}: ${messageToClient}, with response: ${JSON.stringify(response)}`);
+            const response = await fetch(WEBSOCKET_COMM_FUNC, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dataToFunction),
+            });
+
+            // Always check response.ok because fetch won't reject on standard HTTP errors (like 404 or 500)
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Success:', data);
         } catch (error) {
-            console.error("Error invoking Lambda:", error);
-            throw error;
+            console.error('Error during POST request:', error);
         }
     }
 }

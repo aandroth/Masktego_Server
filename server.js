@@ -13,6 +13,7 @@ const m_port = 5000;
 const args = require('minimist')(process.argv.slice(2));
 let CERT = "";
 let PRIV = "";
+const fetch = require('node-fetch');
 
 const UPDATE_INTERVAL_TIME = 20;
 const NO_PLAYER_TIME_OUT = 120 * 1000;

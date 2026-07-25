@@ -134,9 +134,9 @@ async function SendMessageToClient(clientConnectionId, messageAction = "", messa
     var messageToClient = JSON.stringify(messageData);
 
     var dataToFunction = {
-        data: messageToClient,
-        callbackUrl: CALLBACK_URL,
-        connectionId: clientConnectionId
+        "data": messageToClient,
+        "callbackUrl": CALLBACK_URL,
+        "connectionId": clientConnectionId
     }
     
     try {
@@ -177,9 +177,9 @@ async function SendMessageToAllClients(messageAction = "", messageObj = {}, idOf
             continue;
 
         var dataToFunction = {
-            data: messageToClient,
-            callbackUrl: CALLBACK_URL,
-            connectionId: i
+            "data": messageToClient,
+            "callbackUrl": CALLBACK_URL,
+            "connectionId": i
         }
 
         try {

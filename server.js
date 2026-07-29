@@ -170,16 +170,15 @@ async function SendMessageToAllClients(messageAction = "", messageObj = {}, idOf
     messageData.msgType = "gameController";
     messageData.action = messageAction;
     messageData.message = messageObj;
-    var messageToClient = messageData;
 
     for (var i = 1; i <= 2; ++i) {
         if (i == idOfSendingPlayer) // We skip data sent by the player that sent it, as they already have the data.
             continue;
 
         var dataToFunction = {
-            "data": messageToClient,
+            "data": messageData,
             "callbackUrl": CALLBACK_URL,
-            "connectionId": i
+            "connectionId": i == 1 ? m_orangePlayerConnectionId : m_purplePlayerConnectionId
         }
 
         try {

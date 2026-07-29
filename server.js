@@ -131,10 +131,9 @@ async function SendMessageToClient(clientConnectionId, messageAction = "", messa
     messageData.msgType = "gameController";
     messageData.action = messageAction;
     messageData.message = message;
-    var messageToClient = JSON.stringify(messageData);
 
     var dataToFunction = {
-        "data": messageToClient,
+        "data": messageData,
         "callbackUrl": CALLBACK_URL,
         "connectionId": clientConnectionId
     }

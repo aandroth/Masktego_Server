@@ -158,7 +158,7 @@ async function SendMessageToClient(clientConnectionId, messageAction = "", messa
         console.error('Error during POST request:', error);
     }
 }
-async function SendMessageToAllClients(messageAction = "", messageObj = {}, idOfSendingPlayer = -1) { // -1 means send to all
+async function SendMessageToAllClients(messageAction = "", message = "", idOfSendingPlayer = -1) { // -1 means send to all
     if (messageAction == "") {
         console.log(`Message to Client must have a type!`);
         return;
@@ -168,7 +168,7 @@ async function SendMessageToAllClients(messageAction = "", messageObj = {}, idOf
     messageData.route = "message";
     messageData.msgType = "gameController";
     messageData.action = messageAction;
-    messageData.message = messageObj;
+    messageData.message = message;
 
     for (var i = 1; i <= 2; ++i) {
         if (i == idOfSendingPlayer) // We skip data sent by the player that sent it, as they already have the data.
@@ -205,23 +205,13 @@ async function SendMessageToAllClients(messageAction = "", messageObj = {}, idOf
 const HandleMessage_initial = () => {
 
     console.log(`Sending: Init to players`);
-    let messageData = {
-        action: "player_init",
-        message: `Init`
-    }
-    //SendMessageToClient(messageData);
-    SendMessageToAllClients("player_init", messageData);
-    //SendMessageToAllClients("Player_Join", messageData); Might need this...
+    SendMessageToAllClients("Init", "Init");
+    //SendMessageToAllClients("Player_Join", "Player_Join"); Might need this...
 }
 
 
 const HandleMessage_ping = () => {
-    let messageData = {
-        action: "ping",
-        message: `ping`
-    }
-    //SendMessageToClient(messageData);
-    SendMessageToAllClients("ping", messageData);
+    SendMessageToAllClients("ping", "ping");
 }
 
 HandleMessage_initial();
@@ -240,17 +230,12 @@ HandleMessage_initial();
 //        m_purplePlayer = 2;
 //        m_purplePlayerConnectionId = Number(listedData[2]);
 //    }
-//    let messageData = {
-//        action: "Player_Join",
-//        message: `${id}}`
-//    }
-//    SendMessageToAllClients("Player_Join", messageData);
+//    SendMessageToAllClients("Player_Join", `${id}}`);
 
 //    if (m_playerReadinessDictionary.size == 2) {
 //        SendMessageToAllClients("Player_1_Turn", "Player_1_Turn");
 //        m_playerReadinessDictionary = new Map();
 //    }
-//    SendMessageToClient(messageData);
 //}
 
 
@@ -259,19 +244,14 @@ const HandleMessage_Player_Swapped = (id, listedData) => {
 //      0,        1,               2,               3
     console.log(`Player ${id} has swapped.`);
     m_playerReadinessDictionary.set(id, true);
-    let messageData = {
-        action: "Board_Update",
-        message: `${listedData[1]},${listedData[2]},${listedData[3]}`
-    }
-    SendMessageToAllClients("Board_Update", messageData, id);
+    let action = "Board_Update";
+    let message = `${listedData[1]},${listedData[2]},${listedData[3]}`;
+    SendMessageToAllClients(action, message, id);
 
     if (m_playerReadinessDictionary.size == 2) {
         SendMessageToAllClients("Player_1_Turn", "Player_1_Turn");
         m_playerReadinessDictionary = new Map();
     }
-
-
-    //SendMessageToClient(messageData);
 }
 
 const HandleMessage_Board_Update = (id, stringData) => {

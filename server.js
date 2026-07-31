@@ -207,7 +207,7 @@ async function SendMessageToAllClients(messageAction = "", message = "", idOfSen
 const HandleMessage_initial = () => {
 
     console.log(`Sending: Init to players`);
-    SendMessageToAllClients("Init", "Init");
+    SendMessageToAllClients("Init", "2");
     //SendMessageToAllClients("Player_Join", "Player_Join"); Might need this...
 }
 

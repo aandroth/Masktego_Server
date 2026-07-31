@@ -121,7 +121,7 @@ const server = http.createServer((req, res) => {
     console.log('server running on port 5000');
 });
 
-async function SendMessageToClient(clientConnectionId, messageAction = "", message = {}) {
+async function SendMessageToClient(clientConnectionId, messageAction = "", message = {}, playerId = -1) {
     if (messageAction == "") {
         console.log(`Message to Client must have a type!`);
         return;
@@ -130,7 +130,7 @@ async function SendMessageToClient(clientConnectionId, messageAction = "", messa
     messageData.route = "message";
     messageData.msgType = "gameController";
     messageData.action = messageAction;
-    messageData.message = message;
+    messageData.message = `${message},${playerId}`;
 
     var dataToFunction = {
         "data": messageData,
@@ -173,6 +173,8 @@ async function SendMessageToAllClients(messageAction = "", message = "", idOfSen
     for (var i = 1; i <= 2; ++i) {
         if (i == idOfSendingPlayer) // We skip data sent by the player that sent it, as they already have the data.
             continue;
+
+        messageData.message = `${message},${i}`;
 
         var dataToFunction = {
             "data": messageData,

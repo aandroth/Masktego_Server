@@ -71,11 +71,12 @@ const server = http.createServer((req, res) => {
 
     if (req.method === 'POST') {
 
-        console.log("Server has received POST request");
+        console.log("Server has received POST request with body " + req.body);
 
         req.on('message', () => {
+            console.log("Server has received message ");
             const data = JSON.parse(req.body);
-            console.log("Server has received POST request with body " + req.body);
+            console.log("Server has received body " + req.body);
 
             var stringData = `${data}`;
             var listedData = stringData.split(',');

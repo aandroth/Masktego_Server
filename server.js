@@ -170,6 +170,7 @@ async function SendMessageToAllClients(messageAction = "", message = "", idOfSen
     messageData.action = messageAction;
     messageData.message = message;
 
+
     for (var i = 1; i <= 2; ++i) {
         if (i == idOfSendingPlayer) // We skip data sent by the player that sent it, as they already have the data.
             continue;
@@ -181,6 +182,8 @@ async function SendMessageToAllClients(messageAction = "", message = "", idOfSen
             "callbackUrl": CALLBACK_URL,
             "connectionId": i == 1 ? m_orangePlayerConnectionId : m_purplePlayerConnectionId
         }
+
+        console.log(`Sending messageAction: ${messageAction} to players with message: ${message}, to user: ${i == 1 ? m_orangePlayerConnectionId : m_purplePlayerConnectionId}`);
 
         try {
             const response = await fetch(WEBSOCKET_COMM_FUNC, {

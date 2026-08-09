@@ -71,45 +71,52 @@ const server = http.createServer((req, res) => {
 
     if (req.method === 'POST') {
 
-        console.log("Server has received POST request with body " + req.body);
+        console.log("Server has received POST request");
 
-        req.on('message', () => {
-            console.log("Server has received message ");
-            const data = JSON.parse(req.body);
-            console.log("Server has received body " + req.body);
+        let body = '';
 
-            var stringData = `${data}`;
-            var listedData = stringData.split(',');
-
-            if (listedData[0] != "Ping")
-                console.log(`Received Message: ${stringData}`);
-
-            if (listedData[0] == "Ping") {
-                HandleMessage_ping(ws);
-            }
-            else if (listedData[0] == "Player_Joined") {
-                HandleMessage_Player_Joined(parseInt(listedData[1]), listedData);
-            }
-            else if (listedData[0] == "Player_Swapped") {
-                HandleMessage_Player_Swapped(parseInt(listedData[1]), listedData);
-            }
-            else if (listedData[0] == "Board_Update") {
-                HandleMessage_Board_Update(parseInt(listedData[1]), stringData);
-            }
-            else if (listedData[0] == "Kill_Server") {
-                HandleMessage_killGame();
-            }
-            else {
-                console.log(`Unhandled message type: ${listedData[0]}`);
-            }
+        // Triggered every time a chunk of data is received
+        req.on('data', (chunk) => {
+            body += chunk;
         });
+
+        // Triggered once all data has been received
         req.on('end', () => {
             try {
+
                 // Parse the raw string into a JavaScript Object
                 const jsonData = JSON.parse(body);
 
                 console.log('Received JSON:', jsonData);
 
+                console.log("Server has received message ");
+                const data = JSON.parse(body);
+                console.log("Server has received body " + req.body);
+
+                var stringData = `${data}`;
+                var listedData = stringData.split(',');
+
+                if (listedData[0] != "Ping")
+                    console.log(`Received Message: ${stringData}`);
+
+                if (listedData[0] == "Ping") {
+                    HandleMessage_ping(ws);
+                }
+                else if (listedData[0] == "Player_Joined") {
+                    HandleMessage_Player_Joined(parseInt(listedData[1]), listedData);
+                }
+                else if (listedData[0] == "Player_Swapped") {
+                    HandleMessage_Player_Swapped(parseInt(listedData[1]), listedData);
+                }
+                else if (listedData[0] == "Board_Update") {
+                    HandleMessage_Board_Update(parseInt(listedData[1]), stringData);
+                }
+                else if (listedData[0] == "Kill_Server") {
+                    HandleMessage_killGame();
+                }
+                else {
+                    console.log(`Unhandled message type: ${listedData[0]}`);
+                }
                 // Send a successful response back to the client
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ message: 'Data received successfully!', data: jsonData }));

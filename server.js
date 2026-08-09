@@ -70,6 +70,9 @@ const server = http.createServer((req, res) => {
     console.log("req: " + req.method);
 
     if (req.method === 'POST') {
+
+        console.log("Server has received POST request");
+
         let body = '';
         req.on('message', () => {
             const data = JSON.parse(body);

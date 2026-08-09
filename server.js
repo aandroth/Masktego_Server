@@ -92,6 +92,9 @@ const server = http.createServer((req, res) => {
             else if (listedData[0] == "Board_Update") {
                 HandleMessage_Board_Update(parseInt(listedData[1]), stringData);
             }
+            else if (listedData[0] == "Kill_Server") {
+                HandleMessage_killGame();
+            }
             else {
                 console.log(`Unhandled message type: ${listedData[0]}`);
             }

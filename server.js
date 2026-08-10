@@ -84,13 +84,8 @@ const server = http.createServer((req, res) => {
         req.on('end', () => {
             try {
                 // Parse the raw string into a JavaScript Object
-                const jsonData = JSON.parse(body);
-
-                console.log('Received JSON:', jsonData);
-
-                console.log("Server has received message ");
                 const data = JSON.parse(body);
-                console.log("Server has received body " + req.body);
+                console.log('Received JSON:', data);
 
                 var stringData = `${data}`;
                 var listedData = stringData.split(',');

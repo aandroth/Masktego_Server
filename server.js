@@ -83,7 +83,6 @@ const server = http.createServer((req, res) => {
         // Triggered once all data has been received
         req.on('end', () => {
             try {
-
                 // Parse the raw string into a JavaScript Object
                 const jsonData = JSON.parse(body);
 
@@ -96,12 +95,11 @@ const server = http.createServer((req, res) => {
                 var stringData = `${data}`;
                 var listedData = stringData.split(',');
 
-                if (listedData[0] != "Ping")
+                if (listedData[0] != "Ping") {
                     console.log(`Received Message: ${stringData}`);
-
-                if (listedData[0] == "Ping") {
                     HandleMessage_ping(ws);
                 }
+
                 else if (listedData[0] == "Player_Joined") {
                     HandleMessage_Player_Joined(parseInt(listedData[1]), listedData);
                 }
@@ -109,7 +107,7 @@ const server = http.createServer((req, res) => {
                     HandleMessage_Player_Swapped(parseInt(listedData[1]), listedData);
                 }
                 else if (listedData[0] == "Board_Update") {
-                    HandleMessage_Board_Update(parseInt(listedData[1]), stringData);
+                    HandleMessage_Board_Update(parseInt(listedData[1]), listedData);
                 }
                 else if (listedData[0] == "Kill_Server") {
                     HandleMessage_killGame();
@@ -120,6 +118,7 @@ const server = http.createServer((req, res) => {
                 // Send a successful response back to the client
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ message: 'Data received successfully!', data: jsonData }));
+
             } catch (error) {
                 // Handle invalid JSON payload errors
                 res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -189,7 +188,7 @@ async function SendMessageToAllClients(messageAction = "", message = "", idOfSen
         if (i == idOfSendingPlayer) // We skip data sent by the player that sent it, as they already have the data.
             continue;
 
-        messageData.message = `${message},${i}`;
+        messageData.message = `${messageAction},${i},${message}`;
 
         var dataToFunction = {
             "data": messageData,
@@ -197,7 +196,7 @@ async function SendMessageToAllClients(messageAction = "", message = "", idOfSen
             "connectionId": i == 1 ? m_orangePlayerConnectionId : m_purplePlayerConnectionId
         }
 
-        console.log(`Sending messageAction: ${messageAction} to players with message: ${message}, to user: ${i == 1 ? m_orangePlayerConnectionId : m_purplePlayerConnectionId}`);
+        console.log(`Sending Action: ${messageAction} to players with message: ${message}, to user: ${i == 1 ? m_orangePlayerConnectionId : m_purplePlayerConnectionId}`);
 
         try {
             const response = await fetch(WEBSOCKET_COMM_FUNC, {
@@ -264,7 +263,7 @@ const HandleMessage_Player_Swapped = (id, listedData) => {
     console.log(`Player ${id} has swapped.`);
     m_playerReadinessDictionary.set(id, true);
     let action = "Board_Update";
-    let message = `${listedData[1]},${listedData[2]},${listedData[3]}`;
+    let message = `${listedData[2]},${listedData[3]}`;
     SendMessageToAllClients(action, message, id);
 
     if (m_playerReadinessDictionary.size == 2) {
@@ -273,12 +272,20 @@ const HandleMessage_Player_Swapped = (id, listedData) => {
     }
 }
 
-const HandleMessage_Board_Update = (id, stringData) => {
+//const HandleMessage_Board_Update = (id, stringData) => {
+//    console.log(`Player ${id} sent board update.`);
+
+//    //"Action, playerId, pos0.x | pos0.y, pos1.x | pos1.y
+//    //      0,        1,               2,               3
+//    SendMessageToAllClients("Board_Update", stringData, id);
+//}
+
+const HandleMessage_Board_Update = (id, listedData) => {
     console.log(`Player ${id} sent board update.`);
 
     //"Action, playerId, pos0.x | pos0.y, pos1.x | pos1.y
     //      0,        1,               2,               3
-    SendMessageToAllClients("Board_Update", stringData, id);
+    SendMessageToAllClients("Board_Update", `${listedData[2]},${listedData[3]}`, id);
 }
 
 

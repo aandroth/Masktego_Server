@@ -104,7 +104,7 @@ const server = http.createServer((req, res) => {
                 else if (listedData[0] == "Board_Update") {
                     HandleMessage_Board_Update(parseInt(listedData[1]), listedData);
                 }
-                else if (listedData[0] == "Kill_Server") {
+                else if (listedData[0] == "kill") {
                     HandleMessage_killGame();
                 }
                 else {

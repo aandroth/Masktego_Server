@@ -90,8 +90,8 @@ const server = http.createServer((req, res) => {
                 var stringData = `${data}`;
                 var listedData = stringData.split(',');
 
-                if (listedData[0] != "Ping") {
-                    console.log(`Received Message: ${stringData}`);
+                if (listedData[0] == "Ping") {
+                    console.log(`Received ping: ${stringData}`);
                     HandleMessage_ping(ws);
                 }
 
